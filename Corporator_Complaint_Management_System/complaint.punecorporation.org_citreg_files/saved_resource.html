@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<!-- saved from url=(0111)http://115.124.97.180:8080/PMCGrievance/?wicket:bookmarkablePage=:com.probity.grievance.citizen.page.RegCitizen -->
+<html lang="en" dir="ltr"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<link rel="icon" href="./pmclogohd.png" type="image/x-icon">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0">
+
+<title>Grievance Portal</title>
+<link type="text/css" rel="stylesheet" href="./gov.css" media="all">
+<link type="text/css" rel="stylesheet" href="./materialize.css" media="all">
+<link type="text/css" rel="stylesheet" href="./materializegri.css" media="all">
+<link type="text/css" rel="stylesheet" href="./icon.css" media="all">
+<link type="text/css" rel="stylesheet" href="./font-awesome.css" media="all">
+<script async="" src="./analytics.js.download"></script><script type="text/javascript" src="./jquery-2.1.1.js.download"></script>
+<script type="text/javascript" src="./jquery.flexslider.js.download"></script>
+<script type="text/javascript" src="./init.js.download"></script>
+<script type="text/javascript" src="./materialize.min.js.download"></script>
+
+<!-- For Dashboard Servlet 
+<link type="text/css" rel="stylesheet" href='../CSS/gov.css' media="all" />
+<link type="text/css" rel="stylesheet" href='../CSS/css/materialize.css' media="all" />
+<link type="text/css" rel="stylesheet" href='../CSS/css/materializegri.css' media="all" />
+<link type="text/css" rel="stylesheet" href='../CSS/css/icon.css' media="all" />
+<link type="text/css" rel="stylesheet" href='../CSS/font-awesome-4.6.1/css/font-awesome.css' media="all" />
+<script type="text/javascript" src="../CSS/Js/jquery-2.1.1.js"></script>
+<script type="text/javascript" src="../CSS/jquery.flexslider.js"></script>
+<script type="text/javascript" src="../CSS/Js/init.js"></script>
+<script type="text/javascript" src="../CSS/Js/materialize.min.js"></script>-->
+
+<script>
+	function showPlus() {
+		console.log('showPlus called');
+		$('.plusminus').removeClass('red');
+		$('.plusminus').addClass('green');
+		$('.plusminus').html('<i class="fa fa-plus"></i>');
+	}
+	function showMinus() {
+		console.log('showMinus called');
+		$('.plusminus').removeClass('green');
+		$('.plusminus').addClass('red');
+		$('.plusminus').html('<i class="fa fa-minus"></i>');
+	}
+</script>
+
+
+<script src="./highcharts.js.download"></script>
+<script src="./highcharts-more.js.download"></script>
+<script src="./exporting.js.download"></script>
+<script src="./jquery.ba-throttle-debounce.min.js.download"></script>
+<style>
+.loader {
+	padding: 10px;
+}
+</style>
+<script>
+$(function() {
+	
+});
+function list(url,graphName,id) {
+	if(id == 'P') {
+		$('.listContainer'+id).html("<div class='loader'><img src='../CSS/loading.gif' style='width:100%;max-height:450px;'></img></div>");
+    }
+    else {
+		$('.listContainer'+id).html("<div class='loader'><img src='../CSS/loading.gif' style='width:82%;max-height:450px;'></img></div>");
+    }
+	$.ajax({
+		dataType: 'json',
+		url: url,
+		mimeType: 'application/json',
+		success: function(data){
+			var htmlStr = "";
+			var htmlHead = "<thead><tr>";
+			var htmlBody = "<tbody>";
+			
+			for(var i=0;i<data.header.length;i++) {
+				htmlHead += "<th>"+data.header[i]+"</th>";
+			}
+			htmlHead += "</tr></thead>";
+			
+			for(var i=0;i<data.series.length;i++) {
+				htmlBody += "<tr>";
+				for(var j=0;j<data.series[i].length;j++) {
+					htmlBody += "<td>"+data.series[i][j]+"</td>";
+				}
+				htmlBody += "</tr>";
+			}
+			htmlBody += "</tbody>";
+			
+			htmlStr = "<table class='white striped'>" + htmlHead + htmlBody + "</table>";
+			
+			$('.listContainer'+id).find('.loader').remove();
+	        $('.listContainer'+id).html(htmlStr);
+	        applySticky();
+		},
+		error       : function( xhr ) {
+		    var readyState = {
+		        1: "Loading",
+		        2: "Loaded",
+		        3: "Interactive",
+		        4: "Complete"
+		    };
+		    if(xhr.readyState !== 0 && xhr.status !== 0 && xhr.responseText !== undefined) {
+		        console.log(xhr);
+		    }
+		}
+	});
+}
+
+function piechart(url,graphName,id) {
+    var height = 0;
+    $('.chart'+id).html("<div class='loader'><img src='../CSS/loading.gif' style='width:100%;max-height:450px;'></img></div>");
+   	height = 350;
+	$.ajax({
+		dataType: 'json',
+		url: url,
+		mimeType: 'application/json',
+		success: function(data){
+			$('.chart'+id).find('.loader').remove();
+	        $('.chart'+id).highcharts({
+				chart:{
+					plotBackgroundColor:null,
+					plotBorderWidth:null,
+					plotShadow:false,
+					type:'pie',
+					width:$('.chart'+id).width(),
+					height:height
+				},
+				title:{text:graphName},
+				tooltip:{
+					pointFormat:'{series.name}:<b>{point.percentage:.1f}%</b>'
+				},
+				plotOptions:{
+					pie:{
+						allowPointSelect:true,
+						cursor:'pointer',
+						dataLabels:{
+							enabled:true,
+							format:'<b class="red">{point.name}</b>:{point.percentage:.1f}%',
+							//style:{
+								//color:(Highcharts.theme&&Highcharts.theme.contrastTextColor)||'black'
+							//}
+						},
+					showInLegend: true
+					}
+				},
+				exporting: { enabled: false },
+				credits: {
+				      enabled: false
+				  },
+				series:[{
+				        	name:graphName,
+				        	colorByPoint:true,
+				        	data:data,
+				        	dataLabels:{
+				                enabled: false, 
+				                style: {
+				                	textShadow: 'none'
+				            	}
+	                		}
+				        }]
+			});
+		},
+		error       : function( xhr ) {
+		    var readyState = {
+		        1: "Loading",
+		        2: "Loaded",
+		        3: "Interactive",
+		        4: "Complete"
+		    };
+		    if(xhr.readyState !== 0 && xhr.status !== 0 && xhr.responseText !== undefined) {
+		        console.log(xhr);
+		    }
+		}
+	});
+}
+function barchart(url,graphName,id) {
+	var height = 0;
+	$('.chart'+id).html("<div class='loader'><img src='../CSS/loading.gif' style='width:100%;max-height:450px;'></img></div>");
+   	height = 350;
+    console.log('width:',$('.chart'+id).width(),'height:',height);
+	$.ajax({
+		dataType: 'json',
+		url: url,
+		mimeType: 'application/json',
+		success: function(data){
+			$('.chart'+id).find('.loader').remove();
+	        $('.chart'+id).highcharts({
+	        	chart: {
+	                type: 'bar',
+	                width:$('.chart'+id).width(),
+					height:height
+	            },
+	            title: {
+	                text: graphName
+	            },
+	            xAxis: {
+	                categories: data.categories,
+	                title: {
+	                    text: null
+	                }
+	            },
+	            yAxis: {
+	                min: 0,
+	                title: {
+	                    text: data.title,
+	                    align: 'high'
+	                },
+	                labels: {
+	                    overflow: 'justify'
+	                }
+	            },
+	            tooltip: {
+	                valueSuffix: ' '
+	            },
+	            plotOptions: {
+	                bar: {
+	                    dataLabels: {
+	                        enabled: true
+	                    }
+	                }
+	            },
+	            legend: {
+	                layout: 'vertical',
+	                align: 'right',
+	                verticalAlign: 'top',
+	                x: -40,
+	                y: 80,
+	                floating: true,
+	                borderWidth: 1,
+	                backgroundColor: ((Highcharts.theme && Highcharts.theme.legendBackgroundColor) || '#FFFFFF'),
+	                shadow: true
+	            },
+	            credits: {
+	                enabled: false
+	            },
+	            exporting: { enabled: false },
+	            series: data.series
+	        });
+		},
+		error       : function( xhr ) {
+		    var readyState = {
+		        1: "Loading",
+		        2: "Loaded",
+		        3: "Interactive",
+		        4: "Complete"
+		    };
+		    if(xhr.readyState !== 0 && xhr.status !== 0 && xhr.responseText !== undefined) {
+		        console.log(xhr);
+		    }
+		}
+	});
+}
+
+function columnchart(url,graphName,id) {
+	var height = 0;
+	$('.chart'+id).html("<div class='loader'><img src='../CSS/loading.gif' style='width:100%;max-height:450px;'></img></div>");
+   	height = 350;
+	$.ajax({
+		dataType: 'json',
+		url: url,
+		mimeType: 'application/json',
+		success: function(data){
+			$('.chart'+id).find('.loader').remove();
+	        $('.chart'+id).highcharts({
+	        	chart: {
+	                type: 'column',
+	                width:$('.chart'+id).width(),
+					height:height
+	            },
+	            title: {
+	                text: graphName
+	            },
+	            xAxis: {
+	                categories: data.categories,
+	                crosshair: true
+	            },
+	            yAxis: {
+	                min: 0,
+	                title: {
+	                    text: data.title
+	                }
+	            },
+	            tooltip: {
+	                headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+	                pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+	                    '<td style="padding:0"><b>{point.y:.1f} </b></td></tr>',
+	                footerFormat: '</table>',
+	                shared: true,
+	                useHTML: true
+	            },
+	            plotOptions: {
+	                column: {
+	                    pointPadding: 0.2,
+	                    borderWidth: 0
+	                }
+	            },
+	            series: data.series
+	        });
+		},
+		error       : function( xhr ) {
+		    var readyState = {
+		        1: "Loading",
+		        2: "Loaded",
+		        3: "Interactive",
+		        4: "Complete"
+		    };
+		    if(xhr.readyState !== 0 && xhr.status !== 0 && xhr.responseText !== undefined) {
+		        console.log(xhr);
+		    }
+		}
+	});
+}
+
+function linechart(url,graphName,id) {
+	var height = 0;
+	$('.chart'+id).html("<div class='loader'><img src='../CSS/loading.gif' style='width:100%;max-height:450px;'></img></div>");
+   	height = 350;
+	$.ajax({
+		dataType: 'json',
+		url: url,
+		mimeType: 'application/json',
+		success: function(data){
+			$('.chart'+id).find('.loader').remove();
+	        $('.chart'+id).highcharts({
+	        	chart: {
+	                type: 'line',
+	                width:$('.chart'+id).width(),
+					height:height
+	            },
+	            exporting: { enabled: false },
+				credits: {
+				      enabled: false
+				  },
+	            title: {
+	                text: graphName
+	            },
+	            xAxis: {
+	                categories: data.categories
+	            },
+	            yAxis: {
+	                title: {
+	                    text: data.title
+	                }
+	            },
+	            plotOptions: {
+	                line: {
+	                    dataLabels: {
+	                        enabled: true
+	                    },
+	                    enableMouseTracking: false
+	                }
+	            },
+	            series: data.series
+			});
+		},
+		error       : function( xhr ) {
+		    var readyState = {
+		        1: "Loading",
+		        2: "Loaded",
+		        3: "Interactive",
+		        4: "Complete"
+		    };
+		    if(xhr.readyState !== 0 && xhr.status !== 0 && xhr.responseText !== undefined) {
+		        console.log(xhr);
+		    }
+		}
+	});
+}
+</script>
+
+<style>
+.navigator_bg {
+	font-family: Verdana, Tahoma Arial;
+	font-style: normal;
+	color: #FFFFFF;
+	border: 1px solid black;
+	background-color: #00395D;
+}
+
+.navigatorBgDigit {
+	font-family: Verdana, Tahoma Arial;
+	color: #FFFFFF;
+	border: 1px solid black;
+	background-color: #00395D;
+}
+
+.navigator_active {
+	font-family: Verdana, Tahoma Arial;
+	font-style: normal;
+	background-color: #236B98;
+	color: #AFEEEE;
+}
+
+a.navigatorLink:link {
+	font-family: Verdana, Tahoma, Arial;
+	color: #FFFFFF;
+	text-decoration: none;
+	background-color: #00395D;
+}
+
+a.navigatorLink:visited {
+	font-family: Verdana, Tahoma, Arial;
+	color: #ffffff;
+	text-decoration: none;
+	background-color: #00395D;
+}
+
+a.navigatorLink:hover {
+	font-family: Verdana, Tahoma, Arial;
+	color: #FFFFFF;
+	text-decoration: none;
+	background-color: #00395D;
+}
+
+a.navigatorLink:active {
+	font-family: Verdana, Tahoma, Arial;
+	color: red;
+	text-decoration: none;
+	background-color: #00395D;
+}
+</style>
+
+<!-- *************************** Script For Google Analytics ********************************************* -->
+<script type="text/javascript">
+$(function() {
+	$('.hiddenHeaderLnk').each(function() {
+		$(this).change();
+	});
+});
+</script>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-60785157-1', 'auto');
+  ga('send', 'pageview');
+  $(".flexslider").flexslider({ directionNav: false });
+</script>
+<!-- *************************** Script For Google Analytics ENDS ********************************************* -->
+<script> 
+$(function() {
+    $('.activeInput').each(function() {
+        console.log($(this).val());
+        if($(this).val() != 'undefined' && $(this).val() != '') {
+            $(this).next('label').addClass('active');
+        }
+    });
+    $('.valid').each(function() {
+        console.log($(this).val());
+        if($(this).val() != 'undefined' && $(this).val() != '') {
+            $(this).next('label').addClass('active');
+        }
+    });
+});    
+
+function activateInput() {
+    console.log('activate input called');
+    
+    $('.activeInput').each(function() {
+        console.log($(this).attr("id"),$(this).val());
+        if($(this).val() != 'undefined' && $(this).val() != '') {
+            $(this).next('label').addClass('active');
+        }
+    });
+}
+function activateValidInput() {
+	console.log('activate input called valid');
+	$('.valid').each(function() {
+        console.log($(this).attr("id"),$(this).val());
+        if($(this).val() != 'undefined' && $(this).val() != '') {
+            $(this).next('label').addClass('active');
+        }
+    });
+}
+	$(function() {
+		$('#slider1').flexslider({
+		   animation: "slide",
+		   controlNav: false,/*false*/
+		   animationLoop: true,/*false*/
+		   slideshow: true,
+		   slideshowSpeed: 2500
+		});
+		
+	});
+</script>
+<style>
+.lrghd {
+	font-size: 20px;
+	font-weight: bold;
+}
+
+@media only screen and (min-width: 993px) {
+	.hdfntsz {
+		font-size: 15px;
+		padding-left: 112px;
+	}
+	.hdulfntsz {
+		font-size: 10px;
+	}
+	.navdvwr {
+		margin-top: -14px;
+	}
+	.social {
+		padding-top: 20px;
+	}
+}
+
+@media only screen and (min-width: 600px) {
+	.hdrul {
+		margin-top: -38px;
+		padding-right: 143px;
+	}
+	.hdfntsz {
+		font-size: 15px;
+		padding-left: 112px;
+	}
+	.hdulfntsz {
+		font-size: 10px;
+	}
+	.navdvwr {
+		margin-top: -14px;
+	}
+}
+
+@media only screen and (min-width: 360px) {
+	.hdrul {
+		margin-top: -38px;
+		padding-right: 143px;
+	}
+	.hdfntsz {
+		font-size: 15px;
+		padding-left: 112px;
+	}
+	.hdulfntsz {
+		font-size: 10px;
+	}
+	.navdvwr {
+		margin-top: -14px;
+	}
+}
+
+.pdleft {
+	padding-left: 10px;
+}
+</style>
+
+<script type="text/javascript" language="javascript">   
+		function disableBackButton()
+		{
+		window.history.forward()
+		}  
+		disableBackButton();  
+		window.onload=disableBackButton();  
+		window.onpageshow=function(evt) { if(evt.persisted) disableBackButton() }  
+		window.onunload=function() { void(0) }  
+        </script>
+
+<style>
+@media only screen and (min-width: 1200px) {
+	header {
+		flex: 1 1 160px;
+	}
+}
+</style>
+
+<style>
+@media only screen and (max-width: 480px) {
+	.nav {
+		margin-bottom: 8%;
+	}
+}
+</style>
+
+<script type="text/javascript" src="./wicket-event.js.download"></script>
+<script type="text/javascript" src="./wicket-ajax.js.download"></script>
+<script type="text/javascript" src="./modal.js.download"></script>
+<link rel="stylesheet" type="text/css" href="./modal.css">
+</head>
+<body style="background-color: #fff; display: flex; min-height: 100vh; flex-direction: column;" marginwidth="0" marginheight="0">
+	<header>
+
+		<div class="row blue darken-4 " style="margin: 0px; border-bottom: 4px solid white; background-image: url(./CSS/bg.jpg)">
+			<div class="col s3 m3 l1 center">
+				<img class="logo" src="./pmclogohd.png" alt="" style="padding-top: 6%; width: 75%; height: 50%;">
+			</div>
+			<div class="col s9 m9 l4">
+
+				<a id="ide6" href="http://115.124.97.180:8080/PMCGrievance/?wicket:bookmarkablePage=:com.probity.grievance.citizen.page.RegCitizen#" onclick="var wcall=wicketAjaxGet(&#39;?wicket:interface=:11:lnkHome::IBehaviorListener:0:&#39;,null,null, function() {return Wicket.$(&#39;ide6&#39;) != null;}.bind(this));return !wcall;"><h5 class="white-text">
+						<b>Pune Municipal Corporation
+						</b>
+					</h5> </a> <a class="white-text" id="ide6" href="http://115.124.97.180:8080/PMCGrievance/?wicket:bookmarkablePage=:com.probity.grievance.citizen.page.RegCitizen#" onclick="var wcall=wicketAjaxGet(&#39;?wicket:interface=:11:lnkHome::IBehaviorListener:0:&#39;,null,null, function() {return Wicket.$(&#39;ide6&#39;) != null;}.bind(this));return !wcall;"><h6 class="white-text" style="margin-left: 0%;">
+						Grievance Management System
+
+					</h6> </a>
+			</div>
+			<div class="col s12 m12 l7 " style="padding-top: 1%;">
+				<div class="col l12 s12 m12">
+
+					<div class="col s4 m3 l3 center right" style="padding-top: 1%;">
+<form action="http://115.124.97.180:8080/PMCGrievance/?wicket:interface=:11:languagePanel:languageForm::IFormSubmitListener::" id="ide7" method="post"><div style="display:none"><input type="hidden" name="ide7_hf_0" id="ide7_hf_0"></div>
+        <input type="image" src="./india_icon.jpg" title="click here for Marathi" name="marathiButton" width="57" height="20" style="border-style: none;" alt="image" id="ide8" onclick="var wcall=wicketSubmitFormById(&#39;ide7&#39;, &#39;?wicket:interface=:11:languagePanel:languageForm:marathiButton::IActivePageBehaviorListener:0:&amp;wicket:ignoreIfNotActive=true&#39;, &#39;marathiButton&#39; ,null,null, function() {return Wicket.$$(this)&amp;&amp;Wicket.$$(&#39;ide7&#39;)}.bind(this));;; return false;">
+        <input type="image" src="./english-icon.png" title="click here for English" name="englishButton" width="57" height="20" style="border-style: none;" alt="image" id="ide9" onclick="var wcall=wicketSubmitFormById(&#39;ide7&#39;, &#39;?wicket:interface=:11:languagePanel:languageForm:englishButton::IActivePageBehaviorListener:0:&amp;wicket:ignoreIfNotActive=true&#39;, &#39;englishButton&#39; ,null,null, function() {return Wicket.$$(this)&amp;&amp;Wicket.$$(&#39;ide7&#39;)}.bind(this));;; return false;">
+               
+               <script>
+   function reloadScreen() {
+		console.log('reloading screen');
+		window.location.reload(true);
+	}
+</script>
+</form>
+</div>
+				</div>
+				<div class="col l12 s12 m12">
+
+					<nav>
+						<div class="nav-wrapper">
+
+							<a href="http://115.124.97.180:8080/PMCGrievance/?wicket:bookmarkablePage=:com.probity.grievance.citizen.page.RegCitizen#" data-activates="mobile-demo" class="button-collapse white-text" style="font-size: 32px; margin-top: -40px"><i class="fa fa-bars"></i>
+							</a>
+
+							<ul class="right hide-on-med-and-down">
+
+								<li><a style="text-decoration: none;" class="white-text" id="idea" href="http://115.124.97.180:8080/PMCGrievance/?wicket:bookmarkablePage=:com.probity.grievance.citizen.page.RegCitizen#" onclick="var wcall=wicketAjaxGet(&#39;?wicket:interface=:11:lstView:0:headerLink::IBehaviorListener:0:&#39;,null,null, function() {return Wicket.$(&#39;idea&#39;) != null;}.bind(this));return !wcall;"> <label class="white-text" style="cursor: pointer; font-size: 14px;" id="ideb">Home</label> </a> <input type="text" style="display: none;" class="hiddenHeaderLnk white-text" value="" name="lstView:0:hiddenHeaderLnk" id="idec" onchange="var wcall=wicketAjaxPost(&#39;?wicket:interface=:11:lstView:0:hiddenHeaderLnk::IBehaviorListener:0:&#39;, wicketSerialize(Wicket.$(&#39;idec&#39;)),null,null, function() {return Wicket.$(&#39;idec&#39;) != null;}.bind(this));"></li><li><a style="text-decoration: none;" class="white-text" id="ided" href="http://115.124.97.180:8080/PMCGrievance/?wicket:bookmarkablePage=:com.probity.grievance.citizen.page.RegCitizen#" onclick="var wcall=wicketAjaxGet(&#39;?wicket:interface=:11:lstView:1:headerLink::IBehaviorListener:0:&#39;,null,null, function() {return Wicket.$(&#39;ided&#39;) != null;}.bind(this));return !wcall;"> <label class="white-text" style="cursor: pointer; font-size: 14px;" id="idee">Login</label> </a> <input type="text" style="display: none;" class="hiddenHeaderLnk white-text" value="" name="lstView:1:hiddenHeaderLnk" id="idef" onchange="var wcall=wicketAjaxPost(&#39;?wicket:interface=:11:lstView:1:hiddenHeaderLnk::IBehaviorListener:0:&#39;, wicketSerialize(Wicket.$(&#39;idef&#39;)),null,null, function() {return Wicket.$(&#39;idef&#39;) != null;}.bind(this));"></li><li><a style="text-decoration: none;" class="white-text" id="idf0" href="http://115.124.97.180:8080/PMCGrievance/?wicket:bookmarkablePage=:com.probity.grievance.citizen.page.RegCitizen#" onclick="var wcall=wicketAjaxGet(&#39;?wicket:interface=:11:lstView:2:headerLink::IBehaviorListener:0:&#39;,null,null, function() {return Wicket.$(&#39;idf0&#39;) != null;}.bind(this));return !wcall;"> <label class="white-text" style="cursor: pointer; font-size: 14px;" id="idf1">Register</label> </a> <input type="text" style="display: none;" class="hiddenHeaderLnk white-text" value="" name="lstView:2:hiddenHeaderLnk" id="idf2" onchange="var wcall=wicketAjaxPost(&#39;?wicket:interface=:11:lstView:2:hiddenHeaderLnk::IBehaviorListener:0:&#39;, wicketSerialize(Wicket.$(&#39;idf2&#39;)),null,null, function() {return Wicket.$(&#39;idf2&#39;) != null;}.bind(this));"></li><li><a style="text-decoration: none;" class="white-text" id="idf3" href="http://115.124.97.180:8080/PMCGrievance/?wicket:bookmarkablePage=:com.probity.grievance.citizen.page.RegCitizen#" onclick="var wcall=wicketAjaxGet(&#39;?wicket:interface=:11:lstView:3:headerLink::IBehaviorListener:0:&#39;,null,null, function() {return Wicket.$(&#39;idf3&#39;) != null;}.bind(this));return !wcall;"> <label class="white-text" style="cursor: pointer; font-size: 14px;" id="idf4">Citizen User Guide</label> </a> <input type="text" style="display: none;" class="hiddenHeaderLnk white-text" value="" name="lstView:3:hiddenHeaderLnk" id="idf5" onchange="var wcall=wicketAjaxPost(&#39;?wicket:interface=:11:lstView:3:hiddenHeaderLnk::IBehaviorListener:0:&#39;, wicketSerialize(Wicket.$(&#39;idf5&#39;)),null,null, function() {return Wicket.$(&#39;idf5&#39;) != null;}.bind(this));"></li>
+
+							</ul>
+
+							<ul class="side-nav" id="mobile-demo" style="left: -250px;">
+
+								<li><a style="text-decoration: none;" id="idea" href="http://115.124.97.180:8080/PMCGrievance/?wicket:bookmarkablePage=:com.probity.grievance.citizen.page.RegCitizen#" onclick="var wcall=wicketAjaxGet(&#39;?wicket:interface=:11:lstView:0:headerLink::IBehaviorListener:0:&#39;,null,null, function() {return Wicket.$(&#39;idea&#39;) != null;}.bind(this));return !wcall;"> <label class="white-text" style="cursor: pointer; font-size: 14px;" id="ideb">Home</label> </a> <input type="text" style="display: none;" class="hiddenHeaderLnk white-text" value="" name="lstView:0:hiddenHeaderLnk" id="idec" onchange="var wcall=wicketAjaxPost(&#39;?wicket:interface=:11:lstView:0:hiddenHeaderLnk::IBehaviorListener:0:&#39;, wicketSerialize(Wicket.$(&#39;idec&#39;)),null,null, function() {return Wicket.$(&#39;idec&#39;) != null;}.bind(this));"></li><li><a style="text-decoration: none;" id="ided" href="http://115.124.97.180:8080/PMCGrievance/?wicket:bookmarkablePage=:com.probity.grievance.citizen.page.RegCitizen#" onclick="var wcall=wicketAjaxGet(&#39;?wicket:interface=:11:lstView:1:headerLink::IBehaviorListener:0:&#39;,null,null, function() {return Wicket.$(&#39;ided&#39;) != null;}.bind(this));return !wcall;"> <label class="white-text" style="cursor: pointer; font-size: 14px;" id="idee">Login</label> </a> <input type="text" style="display: none;" class="hiddenHeaderLnk white-text" value="" name="lstView:1:hiddenHeaderLnk" id="idef" onchange="var wcall=wicketAjaxPost(&#39;?wicket:interface=:11:lstView:1:hiddenHeaderLnk::IBehaviorListener:0:&#39;, wicketSerialize(Wicket.$(&#39;idef&#39;)),null,null, function() {return Wicket.$(&#39;idef&#39;) != null;}.bind(this));"></li><li><a style="text-decoration: none;" id="idf0" href="http://115.124.97.180:8080/PMCGrievance/?wicket:bookmarkablePage=:com.probity.grievance.citizen.page.RegCitizen#" onclick="var wcall=wicketAjaxGet(&#39;?wicket:interface=:11:lstView:2:headerLink::IBehaviorListener:0:&#39;,null,null, function() {return Wicket.$(&#39;idf0&#39;) != null;}.bind(this));return !wcall;"> <label class="white-text" style="cursor: pointer; font-size: 14px;" id="idf1">Register</label> </a> <input type="text" style="display: none;" class="hiddenHeaderLnk white-text" value="" name="lstView:2:hiddenHeaderLnk" id="idf2" onchange="var wcall=wicketAjaxPost(&#39;?wicket:interface=:11:lstView:2:hiddenHeaderLnk::IBehaviorListener:0:&#39;, wicketSerialize(Wicket.$(&#39;idf2&#39;)),null,null, function() {return Wicket.$(&#39;idf2&#39;) != null;}.bind(this));"></li><li><a style="text-decoration: none;" id="idf3" href="http://115.124.97.180:8080/PMCGrievance/?wicket:bookmarkablePage=:com.probity.grievance.citizen.page.RegCitizen#" onclick="var wcall=wicketAjaxGet(&#39;?wicket:interface=:11:lstView:3:headerLink::IBehaviorListener:0:&#39;,null,null, function() {return Wicket.$(&#39;idf3&#39;) != null;}.bind(this));return !wcall;"> <label class="white-text" style="cursor: pointer; font-size: 14px;" id="idf4">Citizen User Guide</label> </a> <input type="text" style="display: none;" class="hiddenHeaderLnk white-text" value="" name="lstView:3:hiddenHeaderLnk" id="idf5" onchange="var wcall=wicketAjaxPost(&#39;?wicket:interface=:11:lstView:3:hiddenHeaderLnk::IBehaviorListener:0:&#39;, wicketSerialize(Wicket.$(&#39;idf5&#39;)),null,null, function() {return Wicket.$(&#39;idf5&#39;) != null;}.bind(this));"></li>
+							</ul>
+						</div>
+					</nav>
+
+
+
+					<!-- div class="col s12 m12 l12 right">
+					<div class="col s4 m4 l4 center" wicket:id="lblCitdiv">
+						<label wicket:id="lblCit" class="white-text"
+							style="font-size: 1rem; margin-left: 73px;"></label>
+					</div>
+					<div class="col s4 m4 l1 center" wicket:id="homeContainer">
+						<a href="./citizen/" class="white-text"><wicket:message
+								key="lblHome" /> </a>
+					</div>
+					<div class="col s4 m4 l1 center" wicket:id="lnkLogindiv">
+						<a wicket:id="lnkLogin" class="white-text"> <wicket:message
+								key="lblLogin" /> </a>
+					</div>
+					<div class="col s4 m4 l1 center" wicket:id="logoutdiv">
+						<a wicket:id="logout" class="white-text"><wicket:message
+								key="lblLogout" /> </a>
+					</div>
+					<div class="col s4 m4 l1 center" wicket:id="lnkRegisterdiv">
+						<a wicket:id="lnkRegister" class="white-text"> <wicket:message
+								key="lblReg" /> </a>
+					</div>
+					<div class="col l3 s4 m4">
+					<a href="./webcontent/PMCGrievance_citizen.pdf" class="white-text"
+						target="_blank" style="padding-top: 20px;"><wicket:message
+							key="lblCitManual">Citizen User Guide</wicket:message> </a></div>
+					
+				</div-->
+				</div>
+
+			</div>
+		</div>
+
+		
+	</header>
+	<main> 
+		<script type="text/javascript" language="javascript">
+        $(function() {
+            $('.activeInput').each(function() {
+                console.log($(this).val());
+                if($(this).val() != 'undefined' && $(this).val() != '') {
+                    $(this).next('label').addClass('active');
+                }
+            });
+        });    
+
+        function activateInput() {
+            console.log('activate input called');
+            $('.activeInput').each(function() {
+                console.log($(this).val());
+                if($(this).val() != 'undefined' && $(this).val() != '') {
+                    $(this).next('label').addClass('active');
+                }
+            });
+        }
+	
+	</script>
+		<form name="CitizenForm" id="idf6" method="post" action="http://115.124.97.180:8080/PMCGrievance/?wicket:interface=:11:CitizenForm::IFormSubmitListener::"><div style="display:none"><input type="hidden" name="idf6_hf_0" id="idf6_hf_0"></div>
+			<div class="row white" id="idf7">
+				<div class="col s12 m12 l12">
+					<div class="card ">
+						<div class="card-content white-text grey darken-2" style="padding: 0px 0px 0px 10px;">
+							<span class="card-title">Create New Account </span>
+						</div>
+						<div class="card-action white">
+							<div class="row">
+								<div class="col s12 m6 l6">
+									<div class="row hide-on-small-only" style="padding-top: 258px;"></div>
+									<div class="row">
+										<label class="grey-text text-darken-2" style="font-size:24px;">Register with PMC Grievance </label> <br> <label>Join PMC Grievacnce </label>
+									</div>
+								</div>
+								<div class="col s12 m6 l6" style="border-left: 1px solid rgb(0, 0, 0);">
+									<div class="row">
+										<div class="input-field col s12">
+											<span id="idf8">
+  
+</span>
+										</div>
+									</div>
+									<div class="row">
+										<div class="input-field col s12">
+											<input type="text" class="validate activeInput" autocomplete="off" onkeyup="this.value=this.value.replace(/^[a-zA-Z]+$,&#39;&#39;)" value="" name="container:FirstName" id="first_name" onchange="var wcall=wicketAjaxPost(&#39;?wicket:interface=:11:CitizenForm:container:FirstName::IBehaviorListener:0:&#39;, wicketSerialize(Wicket.$(&#39;first_name&#39;)),null,null, function() {return Wicket.$(&#39;first_name&#39;) != null;}.bind(this));">
+
+											<label class="grey-text text-darken-2" for="first_name"><font size="3px" color="red">*</font>&nbsp;First Name </label>
+										</div>
+									</div>
+									<div class="row">
+										<div class="input-field col s12">
+											<input id="idf9" type="text" class="validate activeInput" autocomplete="off" onkeyup="this.value=this.value.replace(/^[a-zA-Z]+$,&#39;&#39;)" value="" name="container:txtMiddleName" onchange="var wcall=wicketAjaxPost(&#39;?wicket:interface=:11:CitizenForm:container:txtMiddleName::IBehaviorListener:0:&#39;, wicketSerialize(Wicket.$(&#39;idf9&#39;)),null,null, function() {return Wicket.$(&#39;idf9&#39;) != null;}.bind(this));">
+											<label class="grey-text text-darken-2" for="first_name"> Middle Name
+											</label>
+										</div>
+									</div>
+									<div class="row">
+										<div class="input-field col s12">
+											<input id="idfa" type="text" class="validate activeInput" autocomplete="off" value="" name="container:LastName" onchange="var wcall=wicketAjaxPost(&#39;?wicket:interface=:11:CitizenForm:container:LastName::IBehaviorListener:0:&#39;, wicketSerialize(Wicket.$(&#39;idfa&#39;)),null,null, function() {return Wicket.$(&#39;idfa&#39;) != null;}.bind(this));"> <label class="grey-text text-darken-2" for="first_name"><font size="3px" color="red">*</font>&nbsp;Last Name
+											</label>
+										</div>
+									</div>
+									<div class="row">
+										<div class="input-field col s12">
+											<input type="text" class="activeInput" autocomplete="off" maxlength="10" onkeyup="this.value=this.value.replace(/[^0-9]/g,&#39;&#39;)" value="" name="container:txtMobileNo" id="mobileno" onchange="var wcall=wicketAjaxPost(&#39;?wicket:interface=:11:CitizenForm:container:txtMobileNo::IBehaviorListener:0:&#39;, wicketSerialize(Wicket.$(&#39;mobileno&#39;)),null,null, function() {return Wicket.$(&#39;mobileno&#39;) != null;}.bind(this));">
+											<label class="grey-text text-darken-2" for="mobileno"><font size="3px" color="red">*</font>&nbsp; Mobile No
+											</label>
+										</div>
+									</div>
+									<div class="row">
+										<div class="input-field col s12">
+											<input id="email" type="text" class="activeInput" autocomplete="off" value="" name="container:txtEmail" onchange="var wcall=wicketAjaxPost(&#39;?wicket:interface=:11:CitizenForm:container:txtEmail::IBehaviorListener:0:&#39;, wicketSerialize(Wicket.$(&#39;email&#39;)),null,null, function() {return Wicket.$(&#39;email&#39;) != null;}.bind(this));"> <label class="grey-text text-darken-2" for="email"><font size="3px" color="red">*</font>&nbsp; Email 
+											</label>
+										</div>
+									</div>
+									<div class="row">
+										<div class="col s12">
+											<button class="btn small waves-effect waves-light grey darken-2" type="submit" name="container:saveButton" id="idfb">
+												Save
+											</button>
+
+
+											<button type="button" class="btn waves-effect waves-light grey darken-2" name="container:resetButton" id="idfc" onclick="var wcall=wicketSubmitFormById(&#39;idf6&#39;, &#39;?wicket:interface=:11:CitizenForm:container:resetButton::IActivePageBehaviorListener:0:&amp;wicket:ignoreIfNotActive=true&#39;, &#39;container:resetButton&#39; ,null,null, function() {return Wicket.$$(this)&amp;&amp;Wicket.$$(&#39;idf6&#39;)}.bind(this));;; return false;">
+												Reset
+											</button>
+
+										</div>
+									</div>
+
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</form>
+	 </main>
+	<footer class="blue darken-3 social" style="background-image: url(./CSS/bg.jpg); font-size: 12px;">
+		<div class="container">
+			<div>
+	<form action="http://115.124.97.180:8080/PMCGrievance/?wicket:interface=:11:footerPanel:footerForm::IFormSubmitListener::" id="idfd" method="post"><div style="display:none"><input type="hidden" name="idfd_hf_0" id="idfd_hf_0"></div>
+		<div class="row" style="margin-top: 8px; margin-bottom: -7px;">
+			<div class="col s6 m3 l3 center" style="border-right: 1px solid white;">
+				<a class="white-text" href="http://115.124.97.180:8080/PMCGrievance/?wicket:bookmarkablePage=:com.probity.grievance.citizen.page.RegCitizen#" id="idfe" onclick="var wcall=wicketAjaxGet(&#39;?wicket:interface=:11:footerPanel:footerForm:contactUs::IBehaviorListener:0:&#39;,null,null, function() {return Wicket.$(&#39;idfe&#39;) != null;}.bind(this));return !wcall;">Contact us </a>
+			</div>
+			<div class="col s6 m3 l3 center" style="border-right: 1px solid white;">
+				<a class="white-text" href="http://115.124.97.180:8080/PMCGrievance/?wicket:bookmarkablePage=:com.probity.grievance.citizen.page.RegCitizen#" id="idff" onclick="var wcall=wicketAjaxGet(&#39;?wicket:interface=:11:footerPanel:footerForm:aboutUs::IBehaviorListener:0:&#39;,null,null, function() {return Wicket.$(&#39;idff&#39;) != null;}.bind(this));return !wcall;">About us </a>
+			</div>
+			<div class="col s6 m3 l3 center" style="border-right: 1px solid white;">
+				<a class="white-text" href="http://115.124.97.180:8080/PMCGrievance/?wicket:bookmarkablePage=:com.probity.grievance.citizen.page.RegCitizen#" id="id100" onclick="var wcall=wicketAjaxGet(&#39;?wicket:interface=:11:footerPanel:footerForm:websitePolicy::IBehaviorListener:0:&#39;,null,null, function() {return Wicket.$(&#39;id100&#39;) != null;}.bind(this));return !wcall;">Website Policy </a>
+			</div>
+			<div class="col s6 m3 l3 center ">
+				<a class="white-text" href="http://115.124.97.180:8080/PMCGrievance/?wicket:bookmarkablePage=:com.probity.grievance.citizen.page.RegCitizen#" id="id101" onclick="var wcall=wicketAjaxGet(&#39;?wicket:interface=:11:footerPanel:footerForm:termsAndConditions::IBehaviorListener:0:&#39;,null,null, function() {return Wicket.$(&#39;id101&#39;) != null;}.bind(this));return !wcall;">Terms and Conditions </a>
+			</div>
+		</div>
+
+		<div class="row center" style="margin-bottom: 0px;">
+			<h6 class="white-text" style="font-size: 12px;">
+				Disclaimer: The content available on the website is provided Pune Municipal Corporation and all the information available on this website is authentic.
+			</h6>
+			<h6 class="white-text" style="font-size: 12px;">
+				Copyright © 2018 Pune Municipal Corporation. All Rights Reserved. &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;Designed &amp; Developed By: 
+				<a href="http://www.pmc.in/" class="white-text"></a>
+			</h6>
+			<h6 class="orange-text" style="font-size: 12px;">
+				Best Viewed on Internet Explorer Ver. 10 and above, latest versions of Firefox and Chrome Browser.
+			</h6>
+		</div>
+
+		<div class="row noMaterRow" style="margin-bottom: 0px;">
+			<div class="col s6 m3 l3 center">
+				<a class="footerIcon ExternalLinkClick" href="https://jigsaw.w3.org/css-validator/validator?uri=http://complaint.punecorporation.org" target="_blank"> <img src="./vcss.gif" class="ExternalLinkClick" alt="CSS Validation"> </a>
+			</div>
+			<div class="col s6 m3 l3 center">
+				<a class="footerIcon ExternalLinkClick" href="http://guidelines.gov.in/#&amp;panel1-2" target="_blank"> <img src="./gigwLogo.jpg" alt="GIGW Validation">
+				</a>
+			</div>
+			<div class="col s6 m3 l3 center ">
+
+				<a class="footerIcon ExternalLinkClick" href="https://mygov.in/" target="_blank"> <img src="./mygov.png" style="width: 33px;" class="ExternalLinkClick" alt="National Portal"> </a>
+			</div>
+			<div class="col s6 m3 l3 center">
+				<a class="footerIcon ExternalLinkClick" href="https://india.gov.in/" target="_blank"> <img src="./indialogo.png" class="ExternalLinkClick" alt="National Portal"> </a>
+			</div>
+		</div>
+<div id="modalfb" class="modal indigo darken-1 white-text">
+  <div class="modal-content indigo darken-1 white-text">
+    <h4><a href="https://www.facebook.com/pmcfmc" class="white-text" target="_blank"><i class="fa fa-facebook-square"></i> facebook/pmcfmc</a></h4>
+    
+    <div id="modal_content1" class="row">
+<ol type="1">
+    <li>Login To Facebook</li>
+    <li>Search for PMCFMC to access PMC Feedback &amp; Monitoring Cell page and post grievances on wall.</li>
+    <li>Write/ post your grievance on PMCFMC Facebook wall as a post or message with grievance details, area details, name, mobile number (for better resolution)</li>
+    </ol>
+    </div>
+    
+  </div>
+  </div>
+
+<div id="modalwa" class="modal green darken-2 white-text">
+  <div class="modal-content green darken-2 white-text">
+    <h4><i class="fa fa-whatsapp white-text"></i> +91-9689900002</h4>
+    
+    <div id="modal_content2" class="row">
+<ol type="1">
+    <li>Write your grievance with grievance details, area details, name, email id (to provide feedback).</li>
+    <li>Click a picture of grievance, in case required.</li>
+    <li>Send message on  96899 00002</li>
+    </ol>
+    </div>
+    
+  </div>
+  </div>
+
+<div id="modalmsg" class="modal light-green darken-1 white-text">
+  <div class="modal-content light-green darken-1 white-text">
+    <h4><i class="fa fa-envelope white-text"></i> +91-9689900002</h4>
+    
+    <div id="modal_content3" class="row">
+<ol type="1">
+    <li>Write your grievance with grievance details, area details, name, email id (to provide feedback).</li>
+    <li>Click a picture of grievance, in case required.</li>
+    <li>Send message on  96899 00002</li>
+    </ol>
+    </div>
+    
+  </div>
+  </div>
+  
+  <div id="modaltw" class="modal light-blue accent-4 white-text">
+  <div class="modal-content light-blue accent-4 white-text">
+    <h4><a href="https://twitter.com/pmcpune" target="_blank" class="white-text"><i class="fa fa-twitter"></i>  @pmcpune </a></h4>
+    
+    <div id="modal_content4" class="row">
+<ol type="1">
+    <li>Login to Twitter.</li>
+    <li>Search for PMCFMC to access PMC feedback &amp; Monitoring Cell handle and tweet grievances.</li>
+    <li>Tweet your grievance on @PMCPune handle with grievance details, area details, name, mobile number (for better resolution).</li>
+    </ol>
+    </div>
+    
+  </div>
+  </div>
+  
+  <div id="modalgp" class="modal red lighten-1 white-text">
+  <div class="modal-content red lighten-1 white-text">
+    <h4><a href="https://www.plus.google.com/" target="_blank" class="white-text"><i class="fa fa-google-plus-square"></i>  pmc fmc </a></h4>
+    
+    <div id="modal_content5" class="row">
+	<ol type="1">
+    
+    <li>Login to Google+</li>
+    <li>Search for PMC FMC to access PMC Feedback &amp; Monitoring Cell page and post grievances.</li>
+    <li>Post your grievance on PUNE FMC page with grievance details, area details, name, mobile number (for better resolution).</li>
+    </ol>
+    </div>
+    
+  </div>
+  </div>
+
+
+<div id="modalfd" class="modal yellow darken-4 white-text">
+  <div class="modal-content yellow darken-4 white-text">
+    <h4><i class="fa fa-envelope-o white-text"></i>  feedback@punecorporation.org </h4>
+    
+    <div id="modal_content6" class="row">
+<ol type="1">
+    
+    <li>Write your grievance with grievance details, area details, name, mobile number (for better resolution).</li>
+    <li>Send an email to feedback@punecorporation.org.</li>
+   
+    </ol>
+    </div>
+    
+  </div>
+  </div>
+<div id="modalcc" class="modal purple darken-4 white-text">
+  <div class="modal-content purple darken-4 white-text">
+    <h4><i class="fa fa-phone white-text"></i>  1800 1030 222 </h4>
+    
+    <div id="modal_content" class="row">
+<ol type="1">
+    
+    <li>You can reach out to us by calling above toll free number for suggestions and complaints .</li>
+    
+    </ol>
+    </div>
+    
+  </div>
+  </div>
+
+<script>
+			function openModalfb() {
+				  //simulate ajax call to get the modal content
+				  //open the modal
+				$('.modal-trigger').leanModal();
+				$('#modalfb').openModal();
+				  
+				};
+
+				function openModalwa() {
+					  //simulate ajax call to get the modal content
+					  //open the modal
+					$('.modal-trigger').leanModal();
+					$('#modalwa').openModal();
+					  
+					};
+
+					function openModalmsg() {
+						  //simulate ajax call to get the modal content
+						  //open the modal
+						$('.modal-trigger').leanModal();
+						$('#modalmsg').openModal();
+						  
+						};
+
+						function openModaltw() {
+							  //simulate ajax call to get the modal content
+							  //open the modal
+							$('.modal-trigger').leanModal();
+							$('#modaltw').openModal();
+							  
+							};			
+
+							function openModalgp() {
+								  //simulate ajax call to get the modal content
+								  //open the modal
+								$('.modal-trigger').leanModal();
+								$('#modalgp').openModal();
+								  
+								};
+
+								function openModalfd() {
+									  //simulate ajax call to get the modal content
+									  //open the modal
+									$('.modal-trigger').leanModal();
+									$('#modalfd').openModal();
+									  
+									};		
+									function openModalcc() {
+										 //simulate ajax call to get the modal content
+										 //open the modal
+										$('.modal-trigger').leanModal();
+										$('#modalcc').openModal();
+										 
+										};		
+								
+</script>
+
+
+	</form>
+</div>
+			<div class="row center" style="margin-bottom: 0px;">
+				<div style="display:none" id="id102">
+	
+</div>
+				<a onclick="openModalfb()" title="Facebook"><i class="fa fa-facebook-square white-text" style="font-size: 30px"></i>
+				</a>&nbsp;&nbsp;&nbsp; <a onclick="openModalwa()" title="Whatsapp Messenger"><i class="fa fa-whatsapp white-text" style="font-size: 30px"></i> </a>&nbsp;&nbsp;&nbsp; <a onclick="openModalcc()" title="call center"><i class="fa fa-phone white-text" style="font-size: 30px"></i> </a>&nbsp;&nbsp;&nbsp;
+				<a onclick="openModaltw()" title="Twitter"><i class="fa fa-twitter-square white-text" style="font-size: 30px"></i>
+				</a>&nbsp;&nbsp;&nbsp; <a onclick="openModalgp()" title="Google Plus"><i class="fa fa-google-plus-square white-text" style="font-size: 30px"></i>
+				</a>&nbsp;&nbsp;&nbsp; <a onclick="openModalfd()" title="Email"><i class="fa fa-envelope-o white-text" style="font-size: 30px"></i> </a>&nbsp;&nbsp;&nbsp;
+				<a onclick="openModalmsg()" title="Message"><i class="fa fa-envelope white-text" style="font-size: 30px"></i> </a>&nbsp;&nbsp;&nbsp;
+			</div>
+
+
+		</div>
+	</footer>
+	<!-- <footer class="blue darken-3 social">
+		<div class="center">
+			<div class="row">
+				<div wicket:id="modal1"
+					style="width: 600px; float: none; height: 150px"></div>
+				<a wicket:id="facebook"><img src="./CSS/facebook.png"
+					class="socialimage" alt="" /> </a>&nbsp;&nbsp;&nbsp; <a
+					wicket:id="Whatsapp"><img class="socialimage"
+					src="./CSS/Whatsapp.png" alt="" /> </a>&nbsp;&nbsp;&nbsp; <a
+					wicket:id="twitter"><img class="socialimage"
+					src="./CSS/twitter.png" alt="" /> </a>&nbsp;&nbsp;&nbsp; <a
+					wicket:id="googleplus"><img class="socialimage"
+					src="./CSS/googlepluscopy.png" alt="" /> </a>&nbsp;&nbsp;&nbsp; <a
+					wicket:id="mail"><img class="socialimage" src="./CSS/email.png"
+					alt="" /> </a>&nbsp;&nbsp;&nbsp; <a wicket:id="sms"><img
+					src="./CSS/chat.png" class="socialimage" alt="" /> </a>&nbsp;&nbsp;&nbsp;
+			</div>
+			<div class="row "
+				style="margin-bottom: 0px !important; margin-top: -11px;">
+				<p class="white-text center">
+					<wicket:message key="lblWork">Working Hours 10.00 am to 05.45 pm</wicket:message>
+				</p>
+			</div>
+		</div>
+		<div class="row" style="margin: 0px;">
+			<div class="col s12 m6 l3">
+				<h5>&nbsp;</h5>
+			</div>
+			<div class="col s12 m12 l2 white-text">
+				<p class="center ">
+					<wicket:message key="lblVisitors">Visitors:</wicket:message>
+					<label wicket:id="lblVisitor" class="white-text">123456</label>
+				</p>
+			</div>
+			<div class="col s12 m12 l2 white-text">
+				<p class="left">
+					<wicket:message key="lblPage">Page updated on:</wicket:message>
+					<label wicket:id="lblDatePage" class="white-text">123456</label>
+				</p>
+			</div>
+			<div class="col s12 m12 l3 white-text">
+				<p class="left">
+					<u><a href="http://www.probitysoft.in" target="_blank"
+						class="white-text" id="form2go_link_in_footer">Powered by:
+							Probity Soft Pvt Ltd</a> </u>
+				</p>
+			</div>
+		</div>
+		<div wicket:id=footerPanel" ></div>
+	</footer>-->
+
+
+	<div id="wrapper">
+		<!-- my -->
+		<div style="height: 1px;"></div>
+		<!-- <div class="sticky-container"> 
+			<ul class="sticky" style="padding:50px 0 0 0px;"> 
+				<li> <p> <a href="https://www.facebook.com/PMCGrievance" target="_blank"><img width="32" height="32" title="" src="/PMCGrievance/CSS/Facebook.png" alt=""> </a></p> </li> 
+				<li> <p> <a  href="https://twitter.com/PMCGrievance" target="_blank"><img width="32" height="32" title="" src="/PMCGrievance/CSS/twitter.png" alt=""> </a></p> </li> 
+				<li> <p> <a href="https://www.linkedin.com/PMCGrievance" target="_blank"><img width="32" height="32" title="" src="/PMCGrievance/CSS/LinkedIn.png" alt=""> </a></p> </li> 
+			</ul> 
+		</div> -->
+	</div>
+
+<div class="drag-target" style="left: 0px; touch-action: pan-y; -webkit-user-drag: none; -webkit-tap-highlight-color: rgba(0, 0, 0, 0);"></div><div class="hiddendiv common"></div></body></html>
